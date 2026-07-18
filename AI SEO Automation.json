@@ -1,0 +1,1872 @@
+{
+  "name": "AI SEO Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        480,
+        -16
+      ],
+      "id": "073ff5af-dc55-4638-b940-195c1b084d54",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s",
+          "mode": "list",
+          "cachedResultName": "SEO Automation Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job ID": "={{ $json.jobId }}",
+            "Keywoard": "={{ $json.keyword }}",
+            "Status": "Started",
+            "Start Time": "={{ $now.format('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Job ID",
+              "displayName": "Job ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keywoard",
+              "displayName": "Keywoard",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Start Time",
+              "displayName": "Start Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finish Time",
+              "displayName": "Finish Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "WordPress Url",
+              "displayName": "WordPress Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processing Time",
+              "displayName": "Processing Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        304
+      ],
+      "id": "eb7119bf-6a9a-4041-9dc9-e3a2a4796cfb",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3eKixDKGsqdhCCQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "MODULE 1 — TRIGGER\nWatches Gmail for keyword emails, extracts \neach keyword, assigns a Job ID, and logs \nevery job to Google Sheets before processing.",
+        "height": 368,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        96,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "6f27e0f4-986b-4eab-9f20-49ddc8428a2d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "q": "={{ $json.Keywoard}} Nigeria",
+        "location": "Nigeria",
+        "additionalFields": {
+          "gl": "ng",
+          "hl": "en",
+          "num": "10"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        912,
+        304
+      ],
+      "id": "03a518f4-6233-4f00-a9b9-528496f1d3da",
+      "name": "Google search",
+      "credentials": {
+        "serpApi": {
+          "id": "9lZRazFxtvcJKV5X",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst seen = new Set();\nconst cleaned = [];\n\nfor (const item of items) {\n  const text = item.json.data || '';\n  \n  // Skip blocked pages\n  if (\n    text.length < 500 ||\n    text.includes('error 403') ||\n    text.includes('Checking your browser') ||\n    text.includes('CAPTCHA') ||\n    text.includes('Just a moment')\n  ) continue;\n  \n  const fingerprint = text.substring(0, 100);\n  if (seen.has(fingerprint)) continue;\n  seen.add(fingerprint);\n  \n  cleaned.push({\n    json: {\n      scrapedContent: text.replace(/\\s+/g, ' ').trim().substring(0, 5000),\n      keyword: $('Extract Top URLs').item.json.keyword\n    }\n  });\n}\n\nif (cleaned.length === 0) {\n  return [{ json: { scrapedContent: 'No content available', keyword: '' } }];\n}\n\nreturn cleaned;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        288
+      ],
+      "id": "306a88fc-7601-40c0-8fc8-208ddf848174",
+      "name": "Clean Scraped Content"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst organicResults = data.organic_results || [];\n\nconst urls = organicResults\n  .filter(r => r.link &&\n    !r.link.includes('youtube.com') &&\n    !r.link.includes('facebook.com') &&\n    !r.link.includes('.pdf')\n  )\n  .slice(0, 7)\n  .map(r => ({\n    json: {\n      url: r.link,\n      title: r.title,\n      snippet: r.snippet,\n      position: r.position,\n      keyword: $('Google search').first().json.search_parameters.q\n    }\n  }));\n\nreturn urls;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        288
+      ],
+      "id": "e87c4e4a-f397-42a1-a0c6-0c088f30c26b",
+      "name": "Extract Top URLs"
+    },
+    {
+      "parameters": {
+        "jsCode": "const keywords = $input.first().json.body.keywords;\n\nreturn keywords.map((keyword, index) => ({\n  json: {\n    jobId: `job_${Date.now()}_${index}`,\n    keyword: keyword.trim(),\n    startTime: new Date().toISOString()\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "b799f308-ded2-4b1b-9b30-c92d3d02222b",
+      "name": "Extract Keywords"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2608,
+        480
+      ],
+      "id": "3a8c1a86-5686-4a3a-9dae-e09d22e8340d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior SEO Research Analyst. Your job is to analyze competitor content and produce a detailed SEO research brief.\n\nKEYWORD: {{ $json.data[0].keyword }}\n\nCOMPETITOR CONTENT:\n{{ $json.data.map(item => item.scrapedContent).join('\\n\\n--- Next Source ---\\n\\n') }}\n\nAnalyze the above content and produce a structured research brief with these sections:\n\n1. SEARCH INTENT\nWhat does the user want when searching this keyword? (informational/transactional/navigational)\n\n2. CONTENT STRUCTURE ANALYSIS\n- Main headings used by competitors\n- Subheadings pattern\n- Average estimated word count\n\n3. KEY TOPICS COVERED\nList all major topics competitors cover\n\n4. FAQS FOUND\nList all questions competitors answer\n\n5. SEMANTIC KEYWORDS\nList 15-20 related keywords and phrases used\n\n6. CONTENT GAPS\nWhat important topics, angles, or information are competitors MISSING that we can cover better?\n\n7. RECOMMENDED ARTICLE STRUCTURE\nSuggest H1, H2s, H3s for our article that will outperform competitors\n\n8. UNIQUE ANGLE\nWhat unique angle should our article take to be better than all competitors?\n\nReturn your analysis in clear structured format.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2640,
+        288
+      ],
+      "id": "2e55ea16-b648-4522-bc10-c8dcd0b8a05a",
+      "name": "Research Analyst Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2976,
+        544
+      ],
+      "id": "0e3364e7-2f5a-4ff7-8aa2-9afd646272c6",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Content Gap Analyzer and SEO Strategist.\nYou have received a research brief from a Research Analyst. Your job is to identify the most valuable content gaps and create a Master SEO Brief that will help us write an article that DOMINATES the competition.\n\nKEYWORD: {{ $('Clean Scraped Content').first().json.keyword }}\n\nRESEARCH BRIEF:\n{{ $json.output }}\n\nBased on this research, produce a MASTER SEO BRIEF with these sections:\n\n1. TARGET KEYWORD\nPrimary keyword and 5 LSI variations to target\n\n2. CONTENT GAPS TO EXPLOIT\nList the top 5 most important things competitors are missing that we MUST include\n\n3. MASTER ARTICLE OUTLINE\nComplete H1, H2, H3 structure for our article\n\n4. WORD COUNT TARGET\nRecommended word count to outrank competitors\n\n5. MUST-INCLUDE ELEMENTS\n- Tables needed\n- Lists needed\n- FAQs to answer (minimum 8)\n- Statistics or data points to include\n- Internal link opportunities\n- External link suggestions\n\n6. TONE AND STYLE\nHow should the article sound? Who is the target reader?\n\n7. KEY MESSAGES\n3-5 main points the article MUST communicate clearly\n\n8. EEAT SIGNALS\nHow to demonstrate Experience, Expertise, Authoritativeness, Trustworthiness\n\nReturn the Master SEO Brief in a clear, structured format ready for the AI Writer to use.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2992,
+        288
+      ],
+      "id": "d6c4d463-a08d-4cdb-8478-dbea3b8ea481",
+      "name": "Content Gap Analyzer",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "content": "MODULE 2 — RESEARCH\nSearches Google for each keyword, scrapes top competitor pages using Jina AI, then runs two AI Agents to analyze the content and produce a Master SEO Brief.\nNodes: Google Search (SerpAPI) → Extract Top URLs → Smart Scraper → Jina Scraping → Clean Scraped Content → Aggregate → Research Analyst Agent → Content Gap Analyzer\nOutput: Master SEO Brief with keyword analysis, content gaps, article outline, and tone guide",
+        "height": 544,
+        "width": 404,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "eec8009e-e922-4190-a9c6-1bf84c8673c5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3376,
+        528
+      ],
+      "id": "0fc381ab-05d8-422d-a672-d9f078f364cf",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a world-class SEO Content Writer specializing in Nigerian education content. You write like a professional education journalist producing research-backed guides — warm, authoritative, and deeply human.\n\nYou have received a Master SEO Brief. Your job is to write a complete, publish-ready article that will rank #1 on Google.\n\nKEYWORD: {{ $('Aggregate').first().json.data[0].keyword }}\n\nMASTER SEO BRIEF (includes existing scholarzed.com articles for internal linking):\n{{ $json.output }}\n\n⚠️ CRITICAL WARNING ABOUT INTERNAL LINKS:\nThe Master SEO Brief above ends with a section called \"EXISTING SCHOLARZED.COM ARTICLES FOR INTERNAL LINKING\".\nThis list contains the ONLY URLs you are allowed to use for internal links.\nNEVER create or guess any scholarzed.com URL.\nNEVER link to any URL not in that list.\nIf you cannot find a relevant URL in the list, DO NOT add an internal link.\nViolating this rule is a serious error.\n\nWRITING STYLE GUIDE — READ THIS FIRST:\nWrite like the author of a professional research-backed education guide. Think long-form journalism, not blog posts.\n\n- Every section must start with 2-3 paragraphs of flowing prose BEFORE any lists\n- Bullet points are a LAST RESORT — only for genuine checklists or document lists\n- Numbered steps must be full sentences, not fragments\n- Bold text sparingly — only for the most critical terms\n- Tables only for side-by-side comparisons of multiple items\n- Each paragraph minimum 3 sentences\n- No short choppy sentences back to back\n- Write like you are explaining to a smart Nigerian student sitting across from you\n\nARTICLE RULES:\n1. MINIMUM 2,000 words\n2. Follow the H1/H2/H3 structure from the brief exactly\n3. Include all tables mentioned in the brief as markdown tables\n4. Include all FAQs mentioned in the brief\n5. Write in a warm, natural, human tone — like a knowledgeable Nigerian friend giving advice\n6. Follow Google EEAT principles\n7. Include the primary keyword naturally in the first paragraph, at least 3 H2 headings, and conclusion\n8. Do NOT copy competitor content\n9. Use Nigerian context, real examples, and local knowledge\n10. Strong hook introduction that speaks directly to the reader's pain or goal\n11. Clear conclusion with a strong call to action\n12. Vary sentence lengths — mix short punchy sentences with longer flowing ones\n13. Use transition phrases between sections so it flows naturally\n14. Current year is 2026. Use 2026/2027 for all academic session references. NEVER write 2024 or 2025.\n\nINTERNAL LINKING RULES — VERY IMPORTANT:\n- The Master SEO Brief above contains a list of EXISTING SCHOLARZED.COM ARTICLES at the bottom\n- ONLY link to URLs from that list — copy them exactly as they appear\n- Link naturally within the content where relevant — not forced\n- Use descriptive anchor text that matches the linked article topic\n- Add 2-3 internal links per article maximum\n- NEVER make up or invent URLs\n- NEVER link to external sites as internal links\n- NEVER guess or modify any URL\n- If no relevant article exists in the list, do not add any internal link\n\nSCHOOL LISTING FORMAT — VERY IMPORTANT:\nWhen describing individual schools, NEVER use this robotic format:\n   - Location: Lagos\n   - Tuition: ₦85,000\n   - Accommodation: ₦40,000\n\nALWAYS write school details as natural flowing paragraphs like this:\n   Tucked in the heart of Lagos, this school remains one of the most accessible options for nursing aspirants. Annual tuition sits at ₦85,000, and with accommodation adding another ₦40,000, your total yearly cost comes to around ₦125,000 — remarkably affordable for what you get.\n\nUse markdown tables ONLY when comparing multiple schools side by side.\n\nBULLET LIST RULES — VERY IMPORTANT:\n- NEVER use more than 4 bullet points in a row\n- After every bullet list always write a follow-up paragraph\n- For simple lists of 2-3 items write them as a sentence instead:\n  WRONG:\n  - Biology\n  - Chemistry\n  - Physics\n\n  RIGHT:\n  The required subjects are Biology, Chemistry, and Physics.\n\n- Only use bullet lists for genuinely list-heavy content like checklists or document requirements\n- NEVER write single-word or two-word bullet points\n\nCRITICAL FORMATTING RULES:\n- H1 with #\n- H2 with ##\n- H3 with ###\n- H4 with ####\n- Bold key terms with **bold**\n- Bullet lists with - for general points\n- Numbered lists with 1. 2. 3. for step-by-step processes\n- Markdown tables for comparisons\n- Blockquotes with > for testimonials or important callouts\n- NEVER use standalone dashes as labels inside paragraphs\n- NEVER start a line with \"- Location:\", \"- Tuition:\", \"- Fee:\" or similar\n- Every paragraph must be at least 2 sentences\n- Every section must flow naturally into the next with transition phrases\n\nNUMBERED LIST RULES — VERY IMPORTANT:\n- NEVER put dash sub-points inside numbered list items like this:\n  1. Step one\n     - sub point\n     - sub point\n- INSTEAD write sub points as a flowing paragraph after the numbered item\n\nWrite the complete article now.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3392,
+        288
+      ],
+      "id": "67b00778-6161-4dc9-a0e9-11bec9dbe5c8",
+      "name": " The SEO Writer",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3664,
+        560
+      ],
+      "id": "8d5e135a-ab4a-4ce3-9a59-366ffdf604d5",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a professional Fact Checker and Editor.\n\nReview the article below and verify all facts, statistics, dates, and claims. Fix any inaccuracies. Keep the same structure and format.\n\nARTICLE:\n{{ $json.output }}\n\nYour job:\n1. Check all statistics and numbers for accuracy\n2. Verify all dates mentioned\n3. Fix any factual errors about Nigerian education system\n4. Keep all headings, structure and formatting intact\n5. Do not change the writing style\n6. Return the complete corrected article in markdown format\n\nReturn only the corrected article — no commentary.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3696,
+        288
+      ],
+      "id": "e561a2cc-06fb-4191-b114-2f94114ea223",
+      "name": "Fact Checker ",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4016,
+        544
+      ],
+      "id": "d7fc5715-80f7-499c-9994-8b77368e8e5f",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Human Content Editor who specializes in making AI-written content sound completely natural and human.\n\nIMPORTANT: The current year is 2026. Always write 2025/2026 or 2026/2027 for academic sessions. Never use 2024 anywhere in the article.\n\nReview and rewrite the article below to make it sound 100% human-written.\n\nARTICLE:\n{{ $json.output }}\n\nYour job:\n1. Remove all AI clichés like:\n   - \"In today's world\"\n   - \"It's worth noting\"\n   - \"Furthermore\"\n   - \"In conclusion\" (replace with natural closing)\n   - \"Delve into\"\n   - \"It is important to note\"\n   - \"Navigating\"\n   - \"In the realm of\"\n   - \"As of 2024\" or any mention of 2024\n\n2. Vary sentence lengths dramatically:\n   - Use short punchy sentences\n   - Mix with longer detailed ones\n   - Break up monotonous patterns\n\n3. Add personality and warmth:\n   - Write like a knowledgeable Nigerian education advisor\n   - Use conversational transitions\n   - Add relatable examples where appropriate\n\n4. Keep all factual information intact\n5. Keep all headings and structure intact\n6. Keep all tables and lists intact\n7. Keep markdown formatting intact\n8. Minimum 1,500 words maintained\n9. Never use bullet point dashes (- ) for lists — use proper markdown list formatting\n\nReturn only the rewritten article in markdown — no commentary.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4048,
+        288
+      ],
+      "id": "87ffce96-fecc-417d-8d66-19540854ff00",
+      "name": "Human Rewriter ",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "content": "MODULE 3 — WRITING\nThree chained AI Agents write, fact-check,\nand humanize the article using the Master\nSEO Brief. Output is a publish-ready\n1,500+ word markdown article.\n",
+        "height": 560,
+        "color": "#351C1C"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3600,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "db6b2843-d70f-42af-a0cb-b7b3f915fcfd",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        288
+      ],
+      "id": "2e8ebb47-670d-4531-a425-95c98d25baad",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4368,
+        528
+      ],
+      "id": "0b6de817-57a1-48b1-93ec-899904e7c024",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert SEO Metadata Specialist for a Nigerian education blog.\n\nBased on the article below, generate all SEO metadata needed for WordPress publishing.\n\nKEYWORD: {{ $('Extract Keywords').first().json.keyword }}\n\nARTICLE:\n{{ $json.output }}\n\nGenerate the following in JSON format only — no extra text:\n{\n  \"seoTitle\": \"SEO optimized title based on the KEYWORD (max 60 characters)\",\n  \"metaDescription\": \"Compelling meta description about the article topic (max 160 characters)\",\n  \"slug\": \"url-friendly-slug-based-on-keyword\",\n  \"excerpt\": \"A 2-3 sentence article excerpt for WordPress\",\n  \"categories\": [\"Nigerian Education\", \"Nursing\"],\n  \"tags\": [\"tag1\", \"tag2\", \"tag3\", \"tag4\", \"tag5\"],\n  \"internalLinks\": [\"suggested internal link topic 1\", \"suggested internal link topic 2\"],\n  \"externalLinks\": [\"authoritative source 1\", \"authoritative source 2\"],\n  \"focusKeyphrase\": \"exact focus keyphrase matching the KEYWORD\"\n}\n\nReturn ONLY the JSON object. No explanation. No markdown code blocks.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4400,
+        288
+      ],
+      "id": "2d2be6f4-8c1b-49bd-9322-29e71b708d71",
+      "name": "SEO Optimizer",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "content": " MODULE 4 — SEO OPTIMIZATION\nTakes the rewritten article and generates\nall WordPress metadata — SEO title, meta\ndescription, slug, tags, categories, and\nArticle + FAQ schema JSON-LD.",
+        "height": 560,
+        "color": "#0C4020"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4400,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "ffae0325-8d17-4a6b-a852-ecd581ce28fc",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4000,
+        1136
+      ],
+      "id": "cdc22379-2131-4396-a687-b8ba7e896fb0",
+      "name": "OpenAI Chat Model6",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\n// Parse the JSON from AI output\nlet prompts = {};\ntry {\n  const raw = item.output.replace(/```json|```/g, '').trim();\n  prompts = JSON.parse(raw);\n} catch(e) {\n  // Fallback - use empty objects\n  prompts = {\n    featuredImage: { prompt: \"\", searchKeyword: \"education\" },\n    inPostImage1: { prompt: \"\", searchKeyword: \"students\" },\n    inPostImage2: { prompt: \"\", searchKeyword: \"university\" }\n  };\n}\n\n// Return 3 separate items\nreturn [\n  { json: { prompt: prompts.featuredImage, type: \"featuredImage\" } },\n  { json: { prompt: prompts.inPostImage1, type: \"inPostImage1\" } },\n  { json: { prompt: prompts.inPostImage2, type: \"inPostImage2\" } }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        912
+      ],
+      "id": "bc6f70a0-e19c-45f1-a002-3cde5cbbb168",
+      "name": "Split Image "
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an SEO image strategist for a Nigerian education blog.\nBased on the article title and excerpt provided, generate 3 relevant Unsplash search keywords that will return images directly relevant to the article topic.\n\nARTICLE TITLE: {{ $json.seoTitle }}\nARTICLE EXCERPT: {{ $json.excerpt }}\n\nRULES for searchKeyword:\n- Must be 2 words maximum\n- Must be specific to the article topic but still work on Unsplash\n- NEVER use \"nigeria\", \"nigerian\", \"jamb\", \"waec\", or any Nigeria-specific terms\n- Think about what VISUAL best represents the article topic\n- Examples:\n  - Article about nursing schools → \"nursing students\"\n  - Article about nursing fees → \"medical education\"\n  - Article about scholarships → \"student studying\"\n  - Article about exam → \"exam preparation\"\n  - Article about university admission → \"university campus\"\n  - Article about nursing career → \"hospital nurses\"\n  - Article about cheap schools → \"college students\"\n  - Article about interview → \"job interview\"\n  - Article about requirements → \"healthcare workers\"\n\nIMPORTANT - Each image MUST use a DIFFERENT keyword:\n- featuredImage → keyword related to the MAIN TOPIC\n- inPostImage1 → keyword related to STUDYING or CLASSROOM\n- inPostImage2 → keyword related to HOSPITAL or HEALTHCARE\n\nNEVER use the same keyword twice across the 3 images.\n\nGUARANTEED Unsplash keywords to pick from:\n✅ \"nursing students\"\n✅ \"medical education\"\n✅ \"college students\"\n✅ \"hospital nurses\"\n✅ \"healthcare workers\"\n✅ \"university campus\"\n✅ \"student studying\"\n✅ \"nurse uniform\"\n✅ \"medical students\"\n✅ \"classroom learning\"\n✅ \"exam preparation\"\n✅ \"hospital ward\"\n✅ \"nursing care\"\n✅ \"medical training\"\n\n❌ NEVER use 3+ word phrases\n❌ NEVER use abstract concepts\n❌ NEVER use Nigeria-specific terms\n❌ NEVER repeat the same keyword\n\nReturn ONLY this JSON object, no explanation, no markdown:\n{\n  \"featuredImage\": {\n    \"prompt\": \"A professional photorealistic image relevant to the article topic. No text. High quality editorial style.\",\n    \"searchKeyword\": \"2 word Unsplash search\"\n  },\n  \"inPostImage1\": {\n    \"prompt\": \"A professional clean image relevant to the article topic. No text overlay.\",\n    \"searchKeyword\": \"2 word Unsplash search\"\n  },\n  \"inPostImage2\": {\n    \"prompt\": \"A professional photograph relevant to the article topic. Bright, clear, educational.\",\n    \"searchKeyword\": \"2 word Unsplash search\"\n  }\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4048,
+        912
+      ],
+      "id": "44a7362b-bf1a-42ac-8863-c60af8b8070b",
+      "name": " Image Prompt",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nlet metadata = {};\ntry {\n  const raw = item.output.replace(/```json|```/g, '').trim();\n  metadata = JSON.parse(raw);\n} catch(e) {\n  metadata = {};\n}\n\nconst articleSchema = {\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Article\",\n  \"headline\": metadata.seoTitle || '',\n  \"description\": metadata.metaDescription || '',\n  \"author\": {\n    \"@type\": \"Organization\",\n    \"name\": \"ScholarZed\"\n  },\n  \"publisher\": {\n    \"@type\": \"Organization\",\n    \"name\": \"ScholarZed\",\n    \"url\": \"https://scholarzed.com\"\n  },\n  \"datePublished\": new Date().toISOString(),\n  \"dateModified\": new Date().toISOString()\n};\n\nreturn [{\n  json: {\n    ...metadata,\n    articleSchema: JSON.stringify(articleSchema),\n    faqSchema: '',\n    article: ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        912
+      ],
+      "id": "6dcb75fd-6137-4ed3-8cf2-96eb3f403271",
+      "name": " Schema Builder"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  // Pick a different result index for each image\n  const photoResults = item.json.results;\n  \n  if (!photoResults || photoResults.length === 0) {\n    continue;\n  }\n  \n  // Use different index for each image: 0, 1, 2\n  const index = i % photoResults.length;\n  const photo = photoResults[index];\n  \n  if (!photo || !photo.urls) {\n    continue;\n  }\n  \n  results.push({\n    json: {\n      imageUrl: photo.urls.regular,\n      altText: photo.alt_description || 'education image',\n      photographer: photo.user.name,\n      fileName: `seo-image-${photo.id}.jpg`\n    }\n  });\n}\n\n// Fallback if no images found\nif (results.length === 0) {\n  return [{\n    json: {\n      imageUrl: 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=1080',\n      altText: 'education image',\n      photographer: 'Unsplash',\n      fileName: 'seo-image-fallback.jpg'\n    }\n  }];\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5024,
+        912
+      ],
+      "id": "04196d74-690c-4ffd-836c-ac50f8333890",
+      "name": "convert to binary "
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4608,
+        912
+      ],
+      "id": "8b4950a2-76ae-4e90-a041-48d7143fe7ec",
+      "name": "Wait",
+      "webhookId": "a18eff47-1732-4361-a9ba-7f40e8baed5d"
+    },
+    {
+      "parameters": {
+        "content": "MODULE 5 — IMAGE GENERATION\nFetches 3 relevant images per article from Unsplash and uploads to WordPress media library.\nNodes: Image Prompt Designer (GPT-4o) → Split Image → Wait → Fetch Image (Unsplash) → Convert to Binary → Download Image → Upload to WP Media → Collect Media IDs\nOutput: featured_media_id + gallery_media_ids for publishing module",
+        "height": 768,
+        "color": "#151414"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4800,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "a2d80262-ce84-48fb-a6fa-ded6e123f2f9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "url": "https://api.unsplash.com/search/photos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.prompt.searchKeyword || 'nursing students' }}"
+            },
+            {
+              "name": "orientation",
+              "value": "landscape"
+            },
+            {
+              "name": "client_id",
+              "value": "15e3NJul3Nb--k9pyCn4EmFskDEoe_DWi7ZpVi7vnso"
+            },
+            {
+              "name": "per_page",
+              "value": "=10"
+            },
+            {
+              "name": "page",
+              "value": "={{ Math.floor(Math.random() * 5) + 1 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4816,
+        912
+      ],
+      "id": "4590138b-9ebb-48e3-bcc7-a71e355dc1fe",
+      "name": "Unsplash"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.imageUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "imageData"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5232,
+        912
+      ],
+      "id": "61836514-1701-43f7-8dfe-ed114fa7f363",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "seo-keywords",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "88b94bb4-c60d-45fb-b651-c0e1efd72a11",
+      "name": "Webhook",
+      "webhookId": "4ffe160e-0b74-4e32-a9db-d1ba6f8e9f49"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scholarzed.com/wp-json/wp/v2/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Disposition",
+              "value": "=attachment; filename=\"{{ $json.fileName }}\""
+            },
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "imageData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5440,
+        912
+      ],
+      "id": "1402ea4c-97a1-4048-b6fa-1492ffc0cfdb",
+      "name": "WordPress media upload",
+      "credentials": {
+        "wordpressApi": {
+          "id": "igNIFVa2WgujEjY1",
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn [{\n  json: {\n    featured_media_id: items[0]?.json?.id || 0,\n    inpost_image1_id: items[1]?.json?.id || 0,\n    inpost_image2_id: items[2]?.json?.id || 0,\n    featured_media_url: items[0]?.json?.source_url || '',\n    inpost_image1_url: items[1]?.json?.source_url || '',\n    inpost_image2_url: items[2]?.json?.source_url || '',\n    total_images: items.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5648,
+        912
+      ],
+      "id": "4f0a7f04-2a54-4cf4-9235-6b0a7b305211",
+      "name": "Collect Media Id"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        5856,
+        1152
+      ],
+      "id": "736fd967-f9c9-4e18-973c-1a20a8be634e",
+      "name": "OpenAI Chat Model7",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=KEYWORD: {{ $('Extract Keywords').first().json.keyword }}\n\nARTICLE:\n{{ $('Human Rewriter ').item.json.output }}",
+        "options": {
+          "systemMessage": "You are a strict SEO content quality auditor for a Nigerian education blog.\n\nCheck the article and return ONLY this JSON, nothing else:\n{\n  \"passed\": true,\n  \"score\": 8,\n  \"issues\": [],\n  \"fixes\": []\n}\n\nCRITERIA:\n1. Minimum 1500 words\n2. Target keyword in title\n3. Target keyword in first paragraph\n4. At least 5 H2 headings\n5. At least one table\n6. At least 5 FAQs\n7. No AI clichés (delve, embark, leverage)\n8. Nigerian context present\n\nIf ALL pass → \"passed\": true\nIf ANY fail → \"passed\": false, list issues and fixes\n\nReturn ONLY the JSON. No markdown. No explanation."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5856,
+        912
+      ],
+      "id": "c286e672-6cde-44f5-9700-ba1637b49c5d",
+      "name": "QA Auditor",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "16de13da-c546-4519-ad3d-c8c9ba6c17b0",
+              "leftValue": "={{ JSON.parse($json.output).passed.toString() }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        6208,
+        912
+      ],
+      "id": "1a5a601c-19b9-4ead-979a-be73c0213cfe",
+      "name": "QA Pass"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        6384,
+        1200
+      ],
+      "id": "10bc2988-ca22-42fb-a1da-a6bdbf4568a2",
+      "name": "OpenAI Chat Model8",
+      "credentials": {
+        "openAiApi": {
+          "id": "E1h6avVWop5d8U7o",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=KEYWORD: {{ $('Extract Keywords').first().json.keyword }}\n\nISSUES TO FIX:\n{{ $('QA Auditor').first().json.output }}\nARTICLE:\n{{ $('Human Rewriter ').first().json.output }}",
+        "options": {
+          "systemMessage": "You are an expert SEO editor for a Nigerian education blog.\n\nYour job is to review and polish the article provided — whether it passed or failed QA.\n\nEDITING RULES:\n1. Current year is 2026. Use 2026/2027 for academic sessions. NEVER write 2024 or 2025.\n2. Make sure the target keyword appears naturally in the title and first paragraph.\n3. Ensure word count is above 2000 words — expand thin sections if needed.\n4. Keep the same warm, conversational, human Nigerian tone throughout.\n5. Remove ALL standalone dash lines used as bullet points — convert to proper markdown lists.\n6. Fix any robotic school listing format — write school details as natural paragraphs.\n7. Ensure all sections flow naturally into each other with transition phrases.\n8. Keep all tables, FAQs, and links intact.\n9. Do not add any explanation, preamble or commentary.\n\nReturn ONLY the corrected full article. Nothing else."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        6448,
+        912
+      ],
+      "id": "441473f7-3fab-4cde-8d6f-edb95cd8f67b",
+      "name": "SEO Editor",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "content": "MODULE 6 — QUALITY ASSURANCE\nChecks article quality before publishing and fixes any issues automatically.\nNodes: QA Auditor (GPT-4o) → IF Node (passed?) → SEO Editor (GPT-4o) → Merge\nOutput: Final polished article ready for WordPress publishing",
+        "height": 544,
+        "color": "#642598"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        6064,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "165d6c8f-9362-4d2e-bfeb-2c7c9424ecba",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  results.push({\n    json: {\n      url: item.json.url,\n      keyword: item.json.keyword,\n      jinaUrl: `https://r.jina.ai/${item.json.url}`,\n      directUrl: item.json.url\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        288
+      ],
+      "id": "73154f3d-a3af-4eea-b1b9-7641d20d5f35",
+      "name": "Smart Scraper"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.jinaUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer jina_f4dc0f29c6294112896bb6a619e8e24d9vuLgChpb0bNgRT5taby28D0QpRP"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1872,
+        288
+      ],
+      "id": "38f103a2-eeb7-4f72-9fc1-a0e11e1a6740",
+      "name": "Jina Scraping",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        288
+      ],
+      "id": "f989f428-c5f3-4f16-aa59-ba7ee65f3dcb",
+      "name": "Wait1",
+      "webhookId": "594958bf-7620-4824-98c8-3f9a4f115c4c"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get article content - try SEO Editor first (QA failed path), then Human Rewriter (QA passed path)\nlet mergeOutput = '';\ntry {\n  const seoEditorOutput = $('SEO Editor').first().json.output;\n  if (seoEditorOutput && seoEditorOutput.length > 500) {\n    mergeOutput = seoEditorOutput;\n  }\n} catch(e) {}\nif (!mergeOutput) {\n  try {\n    const humanRewriterOutput = $('Human Rewriter ').first().json.output;\n    if (humanRewriterOutput && humanRewriterOutput.length > 500) {\n      mergeOutput = humanRewriterOutput;\n    }\n  } catch(e) {}\n}\nlet seo = {};\nlet schemaData = {};\nlet media = {};\nlet keyword = '';\ntry {\n  schemaData = $('Schema Builder').first().json;\n} catch(e) {}\ntry {\n  const seoRaw = $('SEO Optimizer').first().json.output;\n  const cleaned = seoRaw.replace(/```json|```/g, '').trim();\n  seo = JSON.parse(cleaned);\n} catch(e) {\n  seo = schemaData;\n}\ntry {\n  media = $('Collect Media Id').first().json;\n} catch(e) {}\ntry {\n  keyword = $('Extract Keywords').first().json.keyword;\n} catch(e) {}\n\n// Inject inpost images into content\nfunction injectImages(content, img1Id, img1Url, img2Id, img2Url) {\n  if (!content) return content;\n  const img1Html = img1Url ? `\\n\\n<figure class=\"wp-block-image size-large\"><img src=\"${img1Url}\" class=\"wp-image-${img1Id}\" alt=\"\" /></figure>\\n\\n` : '';\n  const img2Html = img2Url ? `\\n\\n<figure class=\"wp-block-image size-large\"><img src=\"${img2Url}\" class=\"wp-image-${img2Id}\" alt=\"\" /></figure>\\n\\n` : '';\n  const h2Regex = /^## .+$/gm;\n  let h2Matches = [...content.matchAll(h2Regex)];\n  if (h2Matches.length >= 3 && img1Html) {\n    const pos = h2Matches[2].index;\n    content = content.slice(0, pos) + img1Html + content.slice(pos);\n  }\n  h2Matches = [...content.matchAll(h2Regex)];\n  if (h2Matches.length >= 5 && img2Html) {\n    const pos = h2Matches[4].index;\n    content = content.slice(0, pos) + img2Html + content.slice(pos);\n  }\n  return content;\n}\n\nreturn [{\n  json: {\n    title: schemaData.seoTitle || seo.seoTitle || keyword,\n    slug: schemaData.slug || seo.slug || '',\n    excerpt: schemaData.excerpt || seo.excerpt || '',\n    metaDescription: schemaData.metaDescription || seo.metaDescription || '',\n    focusKeyphrase: schemaData.focusKeyphrase || seo.focusKeyphrase || keyword,\n    categories: schemaData.categories || seo.categories || [],\n    tags: schemaData.tags || seo.tags || [],\n    content: injectImages(mergeOutput, media.inpost_image1_id, media.inpost_image1_url, media.inpost_image2_id, media.inpost_image2_url),\n    featured_media_id: media.featured_media_id || 0,\n    inpost_image1_id: media.inpost_image1_id || 0,\n    inpost_image2_id: media.inpost_image2_id || 0,\n    keyword: keyword\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4608,
+        1536
+      ],
+      "id": "e61f1789-3ea3-4b55-ba90-89d84ab34670",
+      "name": "Prepare WP Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nfor (const item of $input.all()) {\n  let content = item.json.content || '';\n\n  // Fix year\n  content = content.replace(/2025\\/2026/g, '2026/2027');\n  content = content.replace(/2024\\/2025/g, '2026/2027');\n  content = content.replace(/2024/g, '2026');\n  content = content.replace(/2025/g, '2026');\n\n  // Convert markdown tables FIRST\n  content = content.replace(/(\\|.+\\|[ \\t]*\\n)([ \\t]*\\|[-:| \\t]+\\|[ \\t]*\\n)((?:[ \\t]*\\|.+\\|[ \\t]*\\n?)*)/gm, (match) => {\n    const rows = match.trim().split('\\n').filter(r => r.trim());\n    const headers = rows[0].split('|').filter(cell => cell.trim() !== '');\n    const body = rows.slice(2);\n    let html = '<table>\\n<thead>\\n<tr>\\n';\n    headers.forEach(h => { html += `<th>${h.trim()}</th>\\n`; });\n    html += '</tr>\\n</thead>\\n<tbody>\\n';\n    body.forEach(row => {\n      const cells = row.split('|').filter(cell => cell.trim() !== '');\n      if (cells.length > 0) {\n        html += '<tr>\\n';\n        cells.forEach(cell => { html += `<td>${cell.trim()}</td>\\n`; });\n        html += '</tr>\\n';\n      }\n    });\n    html += '</tbody>\\n</table>\\n';\n    return html;\n  });\n\n  // Convert headings\n  content = content.replace(/^#### (.+)$/gm, '<h4>$1</h4>');\n  content = content.replace(/^### (.+)$/gm, '<h3>$1</h3>');\n  content = content.replace(/^## (.+)$/gm, '<h2>$1</h2>');\n  content = content.replace(/^# (.+)$/gm, '<h1>$1</h1>');\n\n  // Remove duplicate H1\n  content = content.replace(/<h1>.*?<\\/h1>/i, '');\n\n  // Convert bold\n  content = content.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');\n\n  // Convert italic *text*\n  content = content.replace(/\\*([^*\\n]+)\\*/g, '<em>$1</em>');\n\n  // Convert links [text](url)\n  content = content.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href=\"$2\">$1</a>');\n\n  // Convert blockquotes\n  content = content.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');\n\n  // Convert horizontal rules\n  content = content.replace(/^---$/gm, '<hr>');\n\n  // Convert asterisk bullet lists (* item)\n  content = content.replace(/(?:^|\\n)((?:\\* .+\\n?)+)/gm, (match, list) => {\n    const listItems = list.trim().split('\\n').map(line => {\n      return `<li>${line.replace(/^\\* /, '').trim()}</li>`;\n    }).join('\\n');\n    return `\\n<ul>\\n${listItems}\\n</ul>\\n`;\n  });\n\n  // Convert indented dash lists (   - item)\n  content = content.replace(/(?:^|\\n)((?:[ \\t]+-[ \\t]+.+\\n?)+)/gm, (match, list) => {\n    const listItems = list.trim().split('\\n').map(line => {\n      return `<li>${line.replace(/^[ \\t]+-[ \\t]+/, '').trim()}</li>`;\n    }).join('\\n');\n    return `\\n<ul>\\n${listItems}\\n</ul>\\n`;\n  });\n\n  // Convert dash bullet lists (- item)\n  content = content.replace(/(?:^|\\n)((?:- .+\\n?)+)/gm, (match, list) => {\n    const listItems = list.trim().split('\\n').map(line => {\n      return `<li>${line.replace(/^- /, '').trim()}</li>`;\n    }).join('\\n');\n    return `\\n<ul>\\n${listItems}\\n</ul>\\n`;\n  });\n\n  // Convert numbered lists\n  content = content.replace(/(?:^|\\n)((?:\\d+\\. .+\\n?)+)/gm, (match, list) => {\n    const listItems = list.trim().split('\\n').map(line => {\n      return `<li>${line.replace(/^\\d+\\. /, '').trim()}</li>`;\n    }).join('\\n');\n    return `\\n<ol>\\n${listItems}\\n</ol>\\n`;\n  });\n\n  // Remove ALL leftover dashes\n  content = content.replace(/^[ \\t]*–[ \\t]/gm, '');\n  content = content.replace(/^[ \\t]*-[ \\t](?!-)/gm, '');\n  content = content.replace(/^[ \\t]*—[ \\t]/gm, '');\n\n  results.push({\n    json: { ...item.json, content }\n  });\n}\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4816,
+        1536
+      ],
+      "id": "5cdb7914-f95e-44a1-bc40-958890880d10",
+      "name": "Markdown to HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://scholarzed.com/wp-json/wp/v2/posts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $('Prepare WP Data').first().json.title }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $('Markdown to HTML').first().json.content }}"
+            },
+            {
+              "name": "slug",
+              "value": "={{ $('Prepare WP Data').first().json.slug }}"
+            },
+            {
+              "name": "excerpt",
+              "value": "={{ $('Prepare WP Data').first().json.excerpt }}"
+            },
+            {
+              "name": "featured_media",
+              "value": "={{ $('Prepare WP Data').first().json.featured_media_id }}"
+            },
+            {
+              "name": "status",
+              "value": "draft"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4992,
+        1536
+      ],
+      "id": "64673360-e1fc-4cac-8b2f-c38b5813ba08",
+      "name": "Create WP Post",
+      "credentials": {
+        "wordpressApi": {
+          "id": "igNIFVa2WgujEjY1",
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://scholarzed.com/wp-json/wp/v2/posts/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"meta\": {\n    \"rank_math_focus_keyword\": \"{{ $('Prepare WP Data').first().json.focusKeyphrase }}\",\n    \"rank_math_description\": \"{{ $('Prepare WP Data').first().json.metaDescription }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5200,
+        1536
+      ],
+      "id": "890cff38-048f-42a8-96de-55bd9e81ec08",
+      "name": "Set RankMath Meta",
+      "credentials": {
+        "wordpressApi": {
+          "id": "igNIFVa2WgujEjY1",
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://scholarzed.com/wp-json/wp/v2/posts/{{ $('Create WP Post').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"categories\": [14, 20],\n  \"tags\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5440,
+        1536
+      ],
+      "id": "65fcd3e8-1bfe-4021-8141-3af944a37a64",
+      "name": " Set Categories & Tags ",
+      "credentials": {
+        "wordpressApi": {
+          "id": "igNIFVa2WgujEjY1",
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://scholarzed.com/wp-json/wp/v2/posts/{{ $('Create WP Post').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"status\": \"publish\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5648,
+        1536
+      ],
+      "id": "eccbec4c-ae91-4743-b96e-855b742ca202",
+      "name": "Publish Post",
+      "credentials": {
+        "wordpressApi": {
+          "id": "igNIFVa2WgujEjY1",
+          "name": "Wordpress account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "MODULE 7 — WORDPRESS PUBLISHING\nPublishes the final polished article to WordPress with full SEO setup.\nNodes: Prepare WP Data → Markdown to HTML → Create WP Post → Set RankMath Meta → Set Categories & Tags → Publish Post\nOutput: Live published post on scholarzed.com with featured image, categories, RankMath focus keyword, and proper HTML formatting including tables.",
+        "height": 672,
+        "color": "#672D57"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5088,
+        1120
+      ],
+      "typeVersion": 1,
+      "id": "3146c3dc-a48c-4db7-b21b-79e6165f4eb4",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "chatId": "7420360787",
+        "text": "=✅ New Article Published on ScholarZed!  \n📝 Title: {{ $('Publish Post').first().json.title.rendered }}  \n🔑 Keyword: {{ $('Prepare WP Data').first().json.keyword }}  \n🔗 Link: {{ $('Publish Post').first().json.link }}  \n🖼️ Images: 3 uploaded \n📅 Published: {{ $('Publish Post').first().json.date }}  \n🚀 ScholarZed AI SEO System",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        6064,
+        1536
+      ],
+      "id": "5fef65f2-0686-44c3-9d41-2933a4e60cc1",
+      "name": "Send a text message",
+      "webhookId": "3c2f6b56-b1d1-4d60-bb74-035940bb0108",
+      "credentials": {
+        "telegramApi": {
+          "id": "KYs7NM6prw68DNWe",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        80
+      ],
+      "id": "c5a0c7e7-020f-46fc-983a-f5095ece75d4",
+      "name": "Wait2",
+      "webhookId": "cedc6407-1eeb-4ae4-81ab-cd10b67a1a94"
+    },
+    {
+      "parameters": {
+        "jsCode": "const briefOutput = $input.first().json.output;\n\nconst response = await this.helpers.httpRequest({\n  method: 'GET',\n  url: 'https://scholarzed.com/wp-json/wp/v2/posts',\n  qs: {\n    per_page: 50,\n    status: 'publish',\n    _fields: 'title,link'\n  }\n});\n\nconst postsList = response.map(p => `- ${p.title.rendered}: ${p.link}`).join('\\n');\n\nreturn [{\n  json: {\n    output: briefOutput + '\\n\\nEXISTING SCHOLARZED.COM ARTICLES FOR INTERNAL LINKING:\\n' +\n    '⚠️ RULES: Use ONLY these URLs. Use the exact article TITLE as anchor text. NEVER use a different description as anchor text. NEVER modify or guess any URL.\\n\\n' +\n    postsList\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3168,
+        784
+      ],
+      "id": "dd5ca241-bbd3-4a38-b25c-9b9df68fbc39",
+      "name": "Fetch And Merge Posts"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s",
+          "mode": "list",
+          "cachedResultName": "SEO Automation Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Completed",
+            "Finish Time": "={{ new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }}",
+            "WordPress Url": "={{ $('Publish Post').first().json.link }}",
+            "Processing Time": "={{ Math.round((Date.now() - new Date($('Publish Post').first().json.date_gmt + 'Z').getTime()) / 1000) }} seconds",
+            "Job ID": "={{ $('Extract Keywords').first().json.jobId }}"
+          },
+          "matchingColumns": [
+            "Job ID"
+          ],
+          "schema": [
+            {
+              "id": "Job ID",
+              "displayName": "Job ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Keywoard",
+              "displayName": "Keywoard",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Start Time",
+              "displayName": "Start Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finish Time",
+              "displayName": "Finish Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "WordPress Url",
+              "displayName": "WordPress Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processing Time",
+              "displayName": "Processing Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5856,
+        1536
+      ],
+      "id": "09538c92-799a-46de-aafd-53c3484a9579",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3eKixDKGsqdhCCQy",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Google search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google search": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Top URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Top URLs": {
+      "main": [
+        [
+          {
+            "node": "Smart Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Keywords": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Scraped Content": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Analyst Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Analyst Agent": {
+      "main": [
+        [
+          {
+            "node": "Content Gap Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Gap Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Gap Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Fetch And Merge Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": " The SEO Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " The SEO Writer": {
+      "main": [
+        [
+          {
+            "node": "Fact Checker ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Fact Checker ",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fact Checker ": {
+      "main": [
+        [
+          {
+            "node": "Human Rewriter ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Human Rewriter ",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Research Analyst Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Rewriter ": {
+      "main": [
+        [
+          {
+            "node": "SEO Optimizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SEO Optimizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Optimizer": {
+      "main": [
+        [
+          {
+            "node": " Schema Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": " Image Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " Image Prompt": {
+      "main": [
+        [
+          {
+            "node": "Split Image ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " Schema Builder": {
+      "main": [
+        [
+          {
+            "node": " Image Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Image ": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Unsplash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unsplash": {
+      "main": [
+        [
+          {
+            "node": "convert to binary ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "convert to binary ": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "WordPress media upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WordPress media upload": {
+      "main": [
+        [
+          {
+            "node": "Collect Media Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Media Id": {
+      "main": [
+        [
+          {
+            "node": "QA Auditor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "QA Auditor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA Auditor": {
+      "main": [
+        [
+          {
+            "node": "QA Pass",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA Pass": {
+      "main": [
+        [
+          {
+            "node": "SEO Editor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SEO Editor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SEO Editor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEO Editor": {
+      "main": [
+        [
+          {
+            "node": "Prepare WP Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Scraper": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jina Scraping": {
+      "main": [
+        [
+          {
+            "node": "Clean Scraped Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Jina Scraping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare WP Data": {
+      "main": [
+        [
+          {
+            "node": "Markdown to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "Create WP Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create WP Post": {
+      "main": [
+        [
+          {
+            "node": "Set RankMath Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set RankMath Meta": {
+      "main": [
+        [
+          {
+            "node": " Set Categories & Tags ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " Set Categories & Tags ": {
+      "main": [
+        [
+          {
+            "node": "Publish Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Post": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch And Merge Posts": {
+      "main": [
+        [
+          {
+            "node": " The SEO Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "4mRRCm3mS9ZDbhWn",
+    "timezone": "Africa/Lagos",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6ce70ef1-5be5-4613-bde5-47a1e15399c1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bde954a890e2b6e930bd4832556bd6fb551e51b0af8ac750b6c4e22ac06e2a78"
+  },
+  "nodeGroups": [],
+  "id": "vYEXQY6c850nzgNh",
+  "tags": []
+}
