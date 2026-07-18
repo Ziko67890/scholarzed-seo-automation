@@ -1,0 +1,238 @@
+{
+  "name": "SEO - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f9845ecc-2988-47c1-baf7-e604134e0912",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $input.first().json;\n\nconst errorMessage = err.error?.message || 'Unknown error';\nconst nodeName = err.error?.node?.name || 'Unknown node';\nconst executionId = err.execution?.id || 'N/A';\nconst errorTime = new Date().toLocaleString('en-GB', { \n  timeZone: 'Africa/Lagos', \n  day: '2-digit', month: 'short', year: 'numeric', \n  hour: '2-digit', minute: '2-digit' \n});\n\nlet keyword = 'Unknown';\nlet jobId = 'Unknown';\n\ntry {\n  const runData = err.execution?.data?.resultData?.runData;\n  if (runData?.['Extract Keywords']) {\n    const ekData = runData['Extract Keywords'];\n    const lastRun = ekData[ekData.length - 1];\n    keyword = lastRun?.data?.main?.[0]?.[0]?.json?.keyword || 'Unknown';\n    jobId = lastRun?.data?.main?.[0]?.[0]?.json?.jobId || 'Unknown';\n  }\n} catch(e) {}\n\nreturn [{\n  json: {\n    jobId,\n    keyword,\n    errorMessage,\n    nodeName,\n    executionId,\n    errorTime,\n    executionUrl: `https://n8n-production-3ee7.up.railway.app/execution/${executionId}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3d771599-ec55-4594-9d4e-6002c28e4cac",
+      "name": "Extract Error Info"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s",
+          "mode": "list",
+          "cachedResultName": "SEO Automation Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/148fdKVme6ojErYp4MRBHKye_aoxGJHv4CLXSSpykw-s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job ID": "={{ $json.jobId }}",
+            "Finish Time": "={{ $json.errorTime }}",
+            "Error": "= {{ $json.errorMessage }}",
+            "Status": "Error"
+          },
+          "matchingColumns": [
+            "Job ID"
+          ],
+          "schema": [
+            {
+              "id": "Job ID",
+              "displayName": "Job ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Keywoard",
+              "displayName": "Keywoard",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Start Time",
+              "displayName": "Start Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Finish Time",
+              "displayName": "Finish Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "WordPress Url",
+              "displayName": "WordPress Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Processing Time",
+              "displayName": "Processing Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f5fb6619-1f67-4f13-97e3-1e4d22ef55b1",
+      "name": "Log Error to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3eKixDKGsqdhCCQy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7420360787",
+        "text": "=🚨 *SEO Pipeline Error Detected!*\n\n📋 *Workflow:* ScholarZed AI SEO System\n🔑 *Keyword:* {{ $json.keyword }}\n🆔 *Job ID:* {{ $json.jobId }}\n\n❌ *Failed At:* {{ $json.nodeName }}\n💬 *Error Message:* {{ $json.errorMessage }}\n\n🕐 *Time:* {{ $json.errorTime }}\n🔍 *Execution:* {{ $json.executionUrl }}\n\n⚠️ Please check the pipeline and retry this keyword manually.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "fbcb5af2-c9a6-43c6-aa46-d672b8c2befd",
+      "name": "Send a text message",
+      "webhookId": "44173c94-fe15-4bc3-9e8d-30f7a4f1520d",
+      "credentials": {
+        "telegramApi": {
+          "id": "Dwz1O7tzuznj938g",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Error Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Error Info": {
+      "main": [
+        [
+          {
+            "node": "Log Error to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Error to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c4f54474-abc3-4284-a47f-f324bd3283c3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bde954a890e2b6e930bd4832556bd6fb551e51b0af8ac750b6c4e22ac06e2a78"
+  },
+  "nodeGroups": [],
+  "id": "4mRRCm3mS9ZDbhWn",
+  "tags": []
+}
