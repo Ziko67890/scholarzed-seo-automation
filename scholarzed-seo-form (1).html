@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ScholarZed SEO — AI Content Automation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .wrap { max-width: 500px; width: 100%; }
+    .header { text-align: center; margin-bottom: 2rem; }
+    .logo {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: #2563eb; display: flex; align-items: center;
+      justify-content: center; margin: 0 auto 12px;
+    }
+    .logo span { color: #fff; font-size: 18px; font-weight: 600; }
+    .brand-name { font-size: 22px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .brand-sub { font-size: 14px; color: #666; }
+    .card {
+      background: #fff; border-radius: 16px; padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06);
+      margin-bottom: 12px;
+    }
+    label { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 8px; display: block; }
+    textarea {
+      width: 100%; border: 1.5px solid #e5e7eb; border-radius: 10px;
+      padding: 10px 12px; font-family: inherit; font-size: 14px; color: #111;
+      background: #fafafa; resize: none; min-height: 80px;
+      line-height: 1.7; outline: none; transition: border-color 0.15s, background 0.15s;
+    }
+    textarea:focus { border-color: #2563eb; background: #fff; }
+    textarea::placeholder { color: #aaa; }
+    .kw-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .hint { font-size: 12px; color: #999; }
+    .badge { font-size: 12px; font-weight: 500; color: #2563eb; background: #eff6ff; padding: 3px 10px; border-radius: 99px; }
+    .info-list { display: flex; flex-direction: column; gap: 10px; }
+    .info-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #555; }
+    .info-icon { width: 28px; height: 28px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .info-icon i { font-size: 15px; color: #2563eb; }
+    .btn {
+      width: 100%; padding: 13px; border-radius: 10px; font-size: 15px;
+      font-weight: 500; border: none; display: flex; align-items: center;
+      justify-content: center; gap: 8px; background: #2563eb; color: #fff;
+      opacity: 0.45; cursor: not-allowed; transition: opacity 0.15s, background 0.15s;
+    }
+    .btn:hover:not(:disabled) { background: #1d4ed8; }
+    .status {
+      display: none; border-radius: 12px; padding: 16px 18px;
+      margin-top: 12px; text-align: center;
+    }
+    .status-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .status-body { font-size: 13px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo"><span>SZ</span></div>
+    <div class="brand-name">ScholarZed SEO</div>
+    <div class="brand-sub">AI Content Automation System</div>
+  </div>
+
+  <div class="card">
+    <label for="kw">Enter your keywords</label>
+    <textarea id="kw" placeholder="One keyword per line..."></textarea>
+    <div class="kw-footer">
+      <span class="hint">One article generated per keyword</span>
+      <span class="badge" id="badge">0 keywords</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="info-list">
+      <div class="info-row">
+        <div class="info-icon"><i class="ti ti-clock"></i></div>
+        10–15 minutes per article
+      </div>
+      <div class="info-row">
+        <div class="info-icon"><i class="ti ti-world"></i></div>
+        Published directly to scholarzed.com
+      </div>
+      <div class="info-row">
+        <div class="info-icon"><i class="ti ti-rocket"></i></div>
+        SEO-optimised, fact-checked and ready to rank
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="genBtn" onclick="submitKw()" disabled>
+    <i class="ti ti-sparkles"></i>
+    Generate articles
+  </button>
+
+  <div class="status" id="statusBox">
+    <div class="status-title" id="sTitle"></div>
+    <div class="status-body" id="sBody"></div>
+  </div>
+
+</div>
+
+<script>
+  const WEBHOOK = 'https://n8n-production-3ee7.up.railway.app/webhook/seo-keywords';
+
+  const kw = document.getElementById('kw');
+  const btn = document.getElementById('genBtn');
+  const badge = document.getElementById('badge');
+  const box = document.getElementById('statusBox');
+  const sT = document.getElementById('sTitle');
+  const sB = document.getElementById('sBody');
+
+  kw.addEventListener('focus', () => { kw.style.borderColor = '#2563eb'; kw.style.background = '#fff'; });
+  kw.addEventListener('blur', () => { kw.style.borderColor = '#e5e7eb'; kw.style.background = '#fafafa'; });
+
+  kw.addEventListener('input', () => {
+    const list = kw.value.split('\n').map(s => s.trim()).filter(Boolean);
+    const n = list.length;
+    badge.textContent = n + (n === 1 ? ' keyword' : ' keywords');
+    btn.disabled = n === 0;
+    btn.style.opacity = n === 0 ? '0.45' : '1';
+    btn.style.cursor = n === 0 ? 'not-allowed' : 'pointer';
+  });
+
+  async function submitKw() {
+    const list = kw.value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (!list.length) return;
+    btn.disabled = true;
+    btn.style.opacity = '0.45';
+    btn.style.cursor = 'not-allowed';
+    box.style.display = 'block';
+    box.style.background = '#eff6ff';
+    box.style.border = '1px solid #bfdbfe';
+    sT.style.color = '#2563eb';
+    sB.style.color = '#1d4ed8';
+    sT.textContent = 'Queuing your articles...';
+    sB.textContent = 'Keywords are being sent to the pipeline.';
+    try {
+      await fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keywords: list })
+      });
+      box.style.background = '#f0fdf4';
+      box.style.border = '1px solid #bbf7d0';
+      sT.style.color = '#15803d';
+      sB.style.color = '#166534';
+      sT.textContent = '🚀 Blast off! Articles are being generated.';
+      sB.textContent = 'Grab a coffee and check back in 15 minutes — your content will be live on scholarzed.com.';
+      kw.value = '';
+      badge.textContent = '0 keywords';
+    } catch(e) {
+      box.style.background = '#fef2f2';
+      box.style.border = '1px solid #fecaca';
+      sT.style.color = '#dc2626';
+      sB.style.color = '#b91c1c';
+      sT.textContent = 'Could not connect';
+      sB.textContent = 'Check your internet connection and try again.';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    }
+  }
+</script>
+</body>
+</html>
